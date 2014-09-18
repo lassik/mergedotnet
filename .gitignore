@@ -1,0 +1,7 @@
+bin/
+lib/
+obj/
+*.csproj.user
+*.nupkg
+*.pdf
+*.suo
