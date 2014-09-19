@@ -28,7 +28,13 @@ namespace Merge
         public class Info
         {
             [Flags]
-            public enum TypeEn { None = 0, File = 1, Dir = 2, Other = 4 }
+            public enum TypeEn
+            {
+                None  = 0,
+                File  = 1,
+                Dir   = 2,
+                Other = 4,
+            }
 
             public TypeEn Type;
             public ulong Size;
