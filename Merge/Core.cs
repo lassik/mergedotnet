@@ -18,6 +18,9 @@ namespace Merge
             // OS X Finder metadata file
             ".DS_Store",
 
+            // OS X Finder icon file (yes, that's a newline in the file name!)
+            "Icon\r",
+
             // Windows Explorer image thumbnail cache file
             "Thumbs.db",
         };
