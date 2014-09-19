@@ -13,7 +13,14 @@ namespace Merge
         public const int WinnerInherit  = -1;
 
         // NOTE: These must be regular files, not directories.
-        public string[] IgnoredFileNames = { ".DS_Store", "Thumbs.db" };
+        public string[] IgnoredFileNames = 
+        {
+            // OS X Finder metadata file
+            ".DS_Store",
+
+            // Windows Explorer image thumbnail cache file
+            "Thumbs.db",
+        };
 
         public class Info
         {
