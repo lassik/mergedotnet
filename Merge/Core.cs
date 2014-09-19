@@ -327,7 +327,8 @@ namespace Merge
                                         AddDeleteEmptyDirOp(ops, i, ent, path);
                                         break;
                                     case Info.TypeEn.Other:
-                                        throw new Exception("Invalid merge configuration: attempt to make a delete operation for symlink or other");                
+                                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                                        break;
                                 }
                                 break;
                     case Info.TypeEn.File:
@@ -352,7 +353,8 @@ namespace Merge
                                         ops.Add(new Op.CreateFile(path.ToArray(), conns[ent.ActualWinner], conns[i], ent.Name, ent.Infos[ent.ActualWinner].Time));
                                         break;
                                     case Info.TypeEn.Other:
-                                        throw new Exception("Invalid merge configuration: should delete symbolic link or other (it's in the way of a file");
+                                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                                        break;
                                 }
                         break;
                     case Info.TypeEn.Dir:
@@ -371,12 +373,33 @@ namespace Merge
                                         // Nothing to do.
                                         break;
                                     case Info.TypeEn.Other:
-                                        throw new Exception("Invalid merge configuration: should delete symbolic link or other (it's in the way of a directory)");
+                                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                                        break;
                                 }
                         MergeRecurseSubs(ent, path, ops);
                         break;
                     case Info.TypeEn.Other:
-                        throw new Exception("Invalid merge configuration: winner is symbolic link or other");
+                        for (int i = 0; i < MaxConnCount; i++)
+                        {
+                            if (ent.Infos[i] == null)
+                                continue;
+                            switch (ent.Infos[i].Type)
+                            {
+                                case Info.TypeEn.None:
+                                    // Nothing to do.
+                                    break;
+                                case Info.TypeEn.File:
+                                    // Nothing to do.
+                                    break;
+                                case Info.TypeEn.Dir:
+                                    // Nothing to do.
+                                    break;
+                                case Info.TypeEn.Other:
+                                    // Nothing to do.
+                                    break;
+                            }
+                        }
+                        break;
                     default:
                         throw new Exception("Can't happen");
                 }
