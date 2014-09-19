@@ -199,7 +199,7 @@ namespace Merge
             MapBits(dirconnmask, delegate(int c) {
                     conns[c].MapDirEntries(delegate(string name, Info info) {
                         if (ShouldIgnore(name, info))
-                            info.AddIgnoredFile(name);
+                            dirent.Infos[c].AddIgnoredFile(name);
                         else
                         {
                             if (!ents.ContainsKey(name))
@@ -371,7 +371,7 @@ namespace Merge
         private void AddDeleteEmptyDirOp(List<Op> ops, int c, Ent ent, List<string> path)
         {
             foreach (string ignoredFileName in ent.Infos[c].ContainedIgnoredFiles)
-                ops.Add(new Op.DeleteFile(path.ToArray(), conns[c], ignoredFileName));
+                ops.Add(new Op.DeleteFile(path.Concat(new string[] {ent.Name}).ToArray(), conns[c], ignoredFileName));
             ops.Add(new Op.DeleteEmptyDir(path.ToArray(), conns[c], ent.Name));
         }
 
