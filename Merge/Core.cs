@@ -308,9 +308,7 @@ namespace Merge
                                         ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
                                         break;
                                     case Info.TypeEn.Dir:
-                                        foreach (string ignoredFileName in ent.Infos[i].ContainedIgnoredFiles)
-                                            ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ignoredFileName));
-                                        ops.Add(new Op.DeleteEmptyDir(path.ToArray(), conns[i], ent.Name));
+                                        AddDeleteEmptyDirOp(ops, i, ent, path);
                                         break;
                                     case Info.TypeEn.Other:
                                         throw new Exception("Invalid merge configuration: attempt to make a delete operation for symlink or other");                
@@ -334,9 +332,7 @@ namespace Merge
                                         }
                                         break;
                                     case Info.TypeEn.Dir:
-                                        foreach (string ignoredFileName in ent.Infos[i].ContainedIgnoredFiles)
-                                            ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ignoredFileName));
-                                        ops.Add(new Op.DeleteEmptyDir(path.ToArray(), conns[i], ent.Name));
+                                        AddDeleteEmptyDirOp(ops, i, ent, path);
                                         ops.Add(new Op.CreateFile(path.ToArray(), conns[ent.ActualWinner], conns[i], ent.Name, ent.Infos[ent.ActualWinner].Time));
                                         break;
                                     case Info.TypeEn.Other:
@@ -370,6 +366,13 @@ namespace Merge
                 }
             }
             return becomes;
+        }
+
+        private void AddDeleteEmptyDirOp(List<Op> ops, int c, Ent ent, List<string> path)
+        {
+            foreach (string ignoredFileName in ent.Infos[c].ContainedIgnoredFiles)
+                ops.Add(new Op.DeleteFile(path.ToArray(), conns[c], ignoredFileName));
+            ops.Add(new Op.DeleteEmptyDir(path.ToArray(), conns[c], ent.Name));
         }
 
         public List<Op> Merge(TreeNodeCollection nodes)
