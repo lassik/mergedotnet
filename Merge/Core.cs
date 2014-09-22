@@ -56,7 +56,7 @@ namespace Merge
                 List<string> names = new List<string>();
                 MapBits(type, delegate(int i)
                 {
-                    names.Add((i < TypeNames.Length) ? TypeNames[i] : String.Format("{}", i));
+                    names.Add((i < TypeNames.Length) ? TypeNames[i] : String.Format("{0}", i));
                 });
                 return String.Join("|", names.ToArray());
             }
@@ -75,7 +75,7 @@ namespace Merge
                 {
                     return;
                 }
-                throw new CannotHappenException(String.Format("Bad type: {}", GetTypeName(type)));
+                throw new CannotHappenException(String.Format("Bad type: {0}", GetTypeName(type)));
             }
 
             public TypeEn Type;
