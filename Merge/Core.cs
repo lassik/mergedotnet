@@ -308,11 +308,10 @@ namespace Merge
                 for (int i = 0; i < MaxConnCount; i++)
                     if (ent.Infos[i] != null)
                         becomes |= ent.Infos[i].Type;
-
-                if (becomes != Info.TypeEn.Dir)
-                {
+                if (becomes == Info.TypeEn.Dir)
+                    MergeRecurseSubs(ent, path, ops);
+                else
                     AssertNoChildren(ent, path, ops);
-                }
             }
             else
             {
