@@ -41,7 +41,7 @@ namespace Merge
 
             public override string ToString()
             {
-                return String.Format("{0} {1} {2}", conn, this.GetType().Name, String.Join("/",path)+"/"+name);
+                return String.Format("{0} {1} {2}", conn, this.GetType().Name, String.Join("/", path) + "/" + name);
             }
 
             public override void Perform()
