@@ -315,67 +315,19 @@ namespace Merge
                             throw new Exception("Invalid merge configuration: should delete all siblings, but for some of them, children remain. This should never happen?");
                         for (int i = 0; i < MaxConnCount; i++)
                             if (ent.Infos[i] != null)
-                                switch (ent.Infos[i].Type)
-                                {
-                                    case Info.TypeEn.None:
-                                        // Nothing to do.
-                                        break;
-                                    case Info.TypeEn.File:
-                                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
-                                        break;
-                                    case Info.TypeEn.Dir:
-                                        AddDeleteEmptyDirOp(ops, i, ent, path);
-                                        break;
-                                    case Info.TypeEn.Other:
-                                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
-                                        break;
-                                }
+                                AddEntOpsWhenNoneWins(ent, path, ops, i);
                                 break;
                     case Info.TypeEn.File:
                         if (MergeRecurseSubs(ent, path, ops) != 0)
                             throw new Exception("Invalid merge configuration: Should delete directory tree (it's in the way of a winning file). This should never happen?");
                         for (int i = 0; i < MaxConnCount; i++)
                             if (ent.Infos[i] != null)
-                                switch (ent.Infos[i].Type)
-                                {
-                                    case Info.TypeEn.None:
-                                        ops.Add(new Op.CreateFile(path.ToArray(), conns[ent.ActualWinner], conns[i], ent.Name, ent.Infos[ent.ActualWinner].Time));
-                                        break;
-                                    case Info.TypeEn.File:
-                                        if (!ent.Infos[i].Equals(ent.Infos[ent.ActualWinner]))
-                                        {
-                                            ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
-                                            ops.Add(new Op.CreateFile(path.ToArray(), conns[ent.ActualWinner], conns[i], ent.Name, ent.Infos[ent.ActualWinner].Time));
-                                        }
-                                        break;
-                                    case Info.TypeEn.Dir:
-                                        AddDeleteEmptyDirOp(ops, i, ent, path);
-                                        ops.Add(new Op.CreateFile(path.ToArray(), conns[ent.ActualWinner], conns[i], ent.Name, ent.Infos[ent.ActualWinner].Time));
-                                        break;
-                                    case Info.TypeEn.Other:
-                                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
-                                        break;
-                                }
+                                AddEntOpsWhenFileWins(ent, path, ops, i);
                         break;
                     case Info.TypeEn.Dir:
                         for (int i = 0; i < MaxConnCount; i++)
                             if (ent.Infos[i] != null)
-                                switch (ent.Infos[i].Type)
-                                {
-                                    case Info.TypeEn.None:
-                                        ops.Add(new Op.CreateEmptyDir(path.ToArray(), conns[i], ent.Name));
-                                        break;
-                                    case Info.TypeEn.File:
-                                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
-                                        ops.Add(new Op.CreateEmptyDir(path.ToArray(), conns[i], ent.Name));
-                                        break;
-                                    case Info.TypeEn.Dir:
-                                        // Nothing to do.
-                                        break;
-                                    case Info.TypeEn.Other:
-                                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
-                                        break;
-                                }
+                                AddEntOpsWhenDirWins(ent, path, ops, i);
                         MergeRecurseSubs(ent, path, ops);
                         break;
                     case Info.TypeEn.Other:
@@ -383,21 +335,7 @@ namespace Merge
                         {
                             if (ent.Infos[i] == null)
                                 continue;
-                            switch (ent.Infos[i].Type)
-                            {
-                                case Info.TypeEn.None:
-                                    // Nothing to do.
-                                    break;
-                                case Info.TypeEn.File:
-                                    // Nothing to do.
-                                    break;
-                                case Info.TypeEn.Dir:
-                                    // Nothing to do.
-                                    break;
-                                case Info.TypeEn.Other:
-                                    // Nothing to do.
-                                    break;
-                            }
+                            AddEntOpsWhenOtherWins(ent, i);
                         }
                         break;
                     default:
@@ -405,6 +343,88 @@ namespace Merge
                 }
             }
             return becomes;
+        }
+
+        private void AddEntOpsWhenNoneWins(Ent ent, List<string> path, List<Op> ops, int i)
+        {
+            switch (ent.Infos[i].Type)
+            {
+                case Info.TypeEn.None:
+                    // Nothing to do.
+                    break;
+                case Info.TypeEn.File:
+                    ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                    break;
+                case Info.TypeEn.Dir:
+                    AddDeleteEmptyDirOp(ops, i, ent, path);
+                    break;
+                case Info.TypeEn.Other:
+                    ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                    break;
+            }
+        }
+
+        private void AddEntOpsWhenFileWins(Ent ent, List<string> path, List<Op> ops, int i)
+        {
+            switch (ent.Infos[i].Type)
+            {
+                case Info.TypeEn.None:
+                    ops.Add(new Op.CreateFile(path.ToArray(), conns[ent.ActualWinner], conns[i], ent.Name, ent.Infos[ent.ActualWinner].Time));
+                    break;
+                case Info.TypeEn.File:
+                    if (!ent.Infos[i].Equals(ent.Infos[ent.ActualWinner]))
+                    {
+                        ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                        ops.Add(new Op.CreateFile(path.ToArray(), conns[ent.ActualWinner], conns[i], ent.Name, ent.Infos[ent.ActualWinner].Time));
+                    }
+                    break;
+                case Info.TypeEn.Dir:
+                    AddDeleteEmptyDirOp(ops, i, ent, path);
+                    ops.Add(new Op.CreateFile(path.ToArray(), conns[ent.ActualWinner], conns[i], ent.Name, ent.Infos[ent.ActualWinner].Time));
+                    break;
+                case Info.TypeEn.Other:
+                    ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                    break;
+            }
+        }
+
+        private void AddEntOpsWhenDirWins(Ent ent, List<string> path, List<Op> ops, int i)
+        {
+            switch (ent.Infos[i].Type)
+            {
+                case Info.TypeEn.None:
+                    ops.Add(new Op.CreateEmptyDir(path.ToArray(), conns[i], ent.Name));
+                    break;
+                case Info.TypeEn.File:
+                    ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                    ops.Add(new Op.CreateEmptyDir(path.ToArray(), conns[i], ent.Name));
+                    break;
+                case Info.TypeEn.Dir:
+                    // Nothing to do.
+                    break;
+                case Info.TypeEn.Other:
+                    ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                    break;
+            }
+        }
+
+        private static void AddEntOpsWhenOtherWins(Ent ent, int i)
+        {
+            switch (ent.Infos[i].Type)
+            {
+                case Info.TypeEn.None:
+                    // Nothing to do.
+                    break;
+                case Info.TypeEn.File:
+                    // Nothing to do.
+                    break;
+                case Info.TypeEn.Dir:
+                    // Nothing to do.
+                    break;
+                case Info.TypeEn.Other:
+                    // Nothing to do.
+                    break;
+            }
         }
 
         private void AddDeleteEmptyDirOp(List<Op> ops, int c, Ent ent, List<string> path)
