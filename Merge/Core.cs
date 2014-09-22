@@ -316,7 +316,7 @@ namespace Merge
                         for (int i = 0; i < MaxConnCount; i++)
                             if (ent.Infos[i] != null)
                                 AddEntOpsWhenNoneWins(ent, path, ops, i);
-                                break;
+                        break;
                     case Info.TypeEn.File:
                         if (MergeRecurseSubs(ent, path, ops) != 0)
                             throw new Exception("Invalid merge configuration: Should delete directory tree (it's in the way of a winning file). This should never happen?");
