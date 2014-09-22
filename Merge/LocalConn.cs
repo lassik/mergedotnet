@@ -103,9 +103,18 @@ namespace Merge
             Directory.CreateDirectory(FullPathWithName(name));
         }
 
+        private static void EnsureNoAttributes(string fullPath, FileAttributes unwantedAttributes)
+        {
+            FileAttributes fileAttr = File.GetAttributes(fullPath);
+            if ((fileAttr & unwantedAttributes) != 0)
+                File.SetAttributes(fullPath, (fileAttr & ~unwantedAttributes));
+        }
+
         public override void DeleteFile(string name)
         {
-            File.Delete(FullPathWithName(name));
+            string fullPath = FullPathWithName(name);
+            EnsureNoAttributes(fullPath, FileAttributes.ReadOnly);
+            File.Delete(fullPath);
         }
 
         public override void OpenFileForReading(string name)
