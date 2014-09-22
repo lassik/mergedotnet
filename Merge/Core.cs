@@ -43,6 +43,41 @@ namespace Merge
                 Other = 4,
             }
 
+            public static string[] TypeNames = new string[]
+            {
+                "none",
+                "file",
+                "dir",
+                "other",
+            };
+
+            public static string GetTypeName(ulong type)
+            {
+                List<string> names = new List<string>();
+                MapBits(type, delegate(int i)
+                {
+                    names.Add((i < TypeNames.Length) ? TypeNames[i] : String.Format("{}", i));
+                });
+                return String.Join("|", names.ToArray());
+            }
+
+            public static string GetTypeName(TypeEn type)
+            {
+                return GetTypeName((ulong)type);
+            }
+
+            public static void AssertValidType(TypeEn type)
+            {
+                if ((type == TypeEn.None) ||
+                    (type == TypeEn.File) ||
+                    (type == TypeEn.Dir)  ||
+                    (type == TypeEn.Other))
+                {
+                    return;
+                }
+                throw new CannotHappenException(String.Format("Bad type: {}", GetTypeName(type)));
+            }
+
             public TypeEn Type;
             public ulong Size;
             public DateTime Time;
@@ -100,7 +135,8 @@ namespace Merge
                 get
                 {
                     if (Winner != WinnerInherit) return Winner;
-                    if (Node.Parent == null) return WinnerPreserve; // can't happen
+                    if (Node.Parent == null)
+                        throw new CannotHappenException("Tried to compute ActualWinner for root node");
                     return ((Ent)Node.Parent.Tag).ActualWinner;
                 }
             }
@@ -188,7 +224,7 @@ namespace Merge
 
         private delegate void MapBitsFn(int i);
 
-        private void MapBits(ulong bitmask, MapBitsFn fn)
+        private static void MapBits(ulong bitmask, MapBitsFn fn)
         {
             for(int i = 0; i < 64; i++)
                 if(0 != (bitmask & ((ulong)1 << i)))
@@ -197,7 +233,7 @@ namespace Merge
 
         private delegate bool MapIntoBitsFn(int i);
 
-        private ulong MapIntoBits(int limit, MapIntoBitsFn fn)
+        private static ulong MapIntoBits(int limit, MapIntoBitsFn fn)
         {
             ulong bitmask = 0;
             for(int i = 0; i < limit; i++)
@@ -285,6 +321,20 @@ namespace Merge
         // Merge phase
         //===========================================================
 
+        delegate void IntToVoidFunc(int i);
+
+        private void MapInfosThatExist(Ent ent, IntToVoidFunc mapfunc)
+        {
+            for (int i = 0; i < MaxConnCount; i++)
+            {
+                if (ent.Infos[i] != null)
+                {
+                    Info.AssertValidType(ent.Infos[i].Type);
+                    mapfunc(i);
+                }
+            }
+        }
+
         private Info.TypeEn MergeRecurseSubs(Ent ent, List<string> path, List<Op> ops)
         {
             Info.TypeEn subbecomes = 0;
@@ -316,36 +366,32 @@ namespace Merge
             else
             {
                 becomes = ent.Infos[ent.ActualWinner].Type;
+                Info.AssertValidType(becomes);
                 switch (becomes)
                 {
                     case Info.TypeEn.None:
                         AssertNoChildren(ent, path, ops);
-                        for (int i = 0; i < MaxConnCount; i++)
-                            if (ent.Infos[i] != null)
-                                AddEntOpsWhenNoneWins(ent, path, ops, i);
+                        MapInfosThatExist(ent, delegate (int i) {
+                            AddEntOpsWhenNoneWins(ent, path, ops, i);
+                        });
                         break;
                     case Info.TypeEn.File:
                         AssertNoChildren(ent, path, ops);
-                        for (int i = 0; i < MaxConnCount; i++)
-                            if (ent.Infos[i] != null)
-                                AddEntOpsWhenFileWins(ent, path, ops, i);
+                        MapInfosThatExist(ent, delegate (int i) {
+                            AddEntOpsWhenFileWins(ent, path, ops, i);
+                        });
                         break;
                     case Info.TypeEn.Dir:
-                        for (int i = 0; i < MaxConnCount; i++)
-                            if (ent.Infos[i] != null)
-                                AddEntOpsWhenDirWins(ent, path, ops, i);
+                        MapInfosThatExist(ent, delegate (int i) {
+                            AddEntOpsWhenDirWins(ent, path, ops, i);
+                        });
                         MergeRecurseSubs(ent, path, ops);
                         break;
                     case Info.TypeEn.Other:
-                        for (int i = 0; i < MaxConnCount; i++)
-                        {
-                            if (ent.Infos[i] == null)
-                                continue;
+                        MapInfosThatExist(ent, delegate (int i) {
                             AddEntOpsWhenOtherWins(ent, i);
-                        }
+                        });
                         break;
-                    default:
-                        throw new CannotHappenException("Uknown entity type");
                 }
             }
             return becomes;
