@@ -25,6 +25,13 @@ namespace Merge
             "Thumbs.db",
         };
 
+        public class CannotHappenException : Exception
+        {
+            public CannotHappenException(string message) : base("Can't happen: " + message)
+            {
+            }
+        }
+
         public class Info
         {
             [Flags]
@@ -302,8 +309,8 @@ namespace Merge
                 for (int i = 0; i < MaxConnCount; i++)
                     if (ent.Infos[i] != null)
                         becomes |= ent.Infos[i].Type;
-                if ((subbecomes != 0) && (becomes != Info.TypeEn.Dir))
-                    throw new Exception("Invalid merge configuration: preserve");
+                if ((becomes != Info.TypeEn.Dir) && (subbecomes != 0))
+                    throw new CannotHappenException("Should delete all siblings but for some of them children remain.");
             }
             else
             {
@@ -312,14 +319,14 @@ namespace Merge
                 {
                     case Info.TypeEn.None:
                         if (MergeRecurseSubs(ent, path, ops) != 0)
-                            throw new Exception("Invalid merge configuration: should delete all siblings, but for some of them, children remain. This should never happen?");
+                            throw new CannotHappenException("Should delete all siblings but for some of them children remain.");
                         for (int i = 0; i < MaxConnCount; i++)
                             if (ent.Infos[i] != null)
                                 AddEntOpsWhenNoneWins(ent, path, ops, i);
                         break;
                     case Info.TypeEn.File:
                         if (MergeRecurseSubs(ent, path, ops) != 0)
-                            throw new Exception("Invalid merge configuration: Should delete directory tree (it's in the way of a winning file). This should never happen?");
+                            throw new CannotHappenException("Should delete all siblings but for some of them children remain.");
                         for (int i = 0; i < MaxConnCount; i++)
                             if (ent.Infos[i] != null)
                                 AddEntOpsWhenFileWins(ent, path, ops, i);
@@ -339,7 +346,7 @@ namespace Merge
                         }
                         break;
                     default:
-                        throw new Exception("Can't happen");
+                        throw new CannotHappenException("Uknown entity type");
                 }
             }
             return becomes;
