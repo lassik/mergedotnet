@@ -305,12 +305,14 @@ namespace Merge
             Info.TypeEn becomes = 0;
             if (ent.ActualWinner == WinnerPreserve)
             {
-                Info.TypeEn subbecomes = MergeRecurseSubs(ent, path, ops);
                 for (int i = 0; i < MaxConnCount; i++)
                     if (ent.Infos[i] != null)
                         becomes |= ent.Infos[i].Type;
-                if ((becomes != Info.TypeEn.Dir) && (subbecomes != 0))
-                    throw new CannotHappenException("Should delete all siblings but for some of them children remain.");
+
+                if (becomes != Info.TypeEn.Dir)
+                {
+                    AssertNoChildren(ent, path, ops);
+                }
             }
             else
             {
@@ -318,15 +320,13 @@ namespace Merge
                 switch (becomes)
                 {
                     case Info.TypeEn.None:
-                        if (MergeRecurseSubs(ent, path, ops) != 0)
-                            throw new CannotHappenException("Should delete all siblings but for some of them children remain.");
+                        AssertNoChildren(ent, path, ops);
                         for (int i = 0; i < MaxConnCount; i++)
                             if (ent.Infos[i] != null)
                                 AddEntOpsWhenNoneWins(ent, path, ops, i);
                         break;
                     case Info.TypeEn.File:
-                        if (MergeRecurseSubs(ent, path, ops) != 0)
-                            throw new CannotHappenException("Should delete all siblings but for some of them children remain.");
+                        AssertNoChildren(ent, path, ops);
                         for (int i = 0; i < MaxConnCount; i++)
                             if (ent.Infos[i] != null)
                                 AddEntOpsWhenFileWins(ent, path, ops, i);
@@ -350,6 +350,15 @@ namespace Merge
                 }
             }
             return becomes;
+        }
+
+        private void AssertNoChildren(Ent ent, List<string> path, List<Op> ops)
+        {
+            Info.TypeEn subbecomes = MergeRecurseSubs(ent, path, ops);
+            if (subbecomes != 0)
+            {
+                throw new CannotHappenException("Should delete all siblings but for some of them children remain.");
+            }
         }
 
         private void AddEntOpsWhenNoneWins(Ent ent, List<string> path, List<Op> ops, int i)
