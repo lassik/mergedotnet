@@ -16,10 +16,12 @@ namespace Merge
             InitializeComponent();
         }
 
-        private List<Op> ops;
+        private List<Op> ops = new List<Op>();
 
         public void Populate(List<Op> ops)
         {
+            if (ops == null)
+                ops = new List<Op>();
             this.ops = ops;
             logListBox.Items.Clear();
             foreach (Op op in ops)
@@ -34,6 +36,8 @@ namespace Merge
             int nTotal = ops.Count;
             var displayLastUpdated = DateTime.Now;
 
+            if ((ops == null) || (ops.Count == 0))
+                return;
             foreach (Op op in ops)
             {
                 var timeNow = DateTime.Now;
@@ -57,7 +61,7 @@ namespace Merge
             this.Update();
             MessageBox.Show("All done!");
             logListBox.Items.Clear();
-            this.ops = null;
+            this.ops = new List<Op>();
         }
     }
 }
