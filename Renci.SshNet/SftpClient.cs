@@ -1361,10 +1361,19 @@ namespace Renci.SshNet
         /// </summary>
         /// <param name="path">The file for which to set the date and time information.</param>
         /// <param name="lastWriteTimeUtc">A System.DateTime containing the value to set for the last write date and time of path. This value is expressed in UTC time.</param>
-        [Obsolete("Note: This method currently throws NotImplementedException because it has not yet been implemented.")]
         public void SetLastWriteTimeUtc(string path, DateTime lastWriteTimeUtc)
         {
-            throw new NotImplementedException();
+            if (path.IsNullOrWhiteSpace())
+                throw new ArgumentException("path");
+
+            if (this._sftpSession == null)
+                throw new SshConnectionException("Client not connected.");
+
+            var fullPath = this._sftpSession.GetCanonicalPath(path);
+
+            var attr = new SftpFileAttributes();
+            attr.LastAccessTime = attr.LastWriteTime = lastWriteTimeUtc;
+            this._sftpSession.RequestSetStat(fullPath, attr);
         }
 
         /// <summary>
