@@ -60,9 +60,10 @@
             this.logListBox.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.logListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.logListBox.FormattingEnabled = true;
+            this.logListBox.IntegralHeight = false;
             this.logListBox.Location = new System.Drawing.Point(0, 30);
             this.logListBox.Name = "logListBox";
-            this.logListBox.Size = new System.Drawing.Size(674, 199);
+            this.logListBox.Size = new System.Drawing.Size(674, 204);
             this.logListBox.TabIndex = 2;
             // 
             // errorLogTextBox
