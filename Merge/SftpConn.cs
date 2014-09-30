@@ -52,6 +52,18 @@ namespace Merge
             subDirParts = new List<string>(wd.Split(new char[] {'/'}, StringSplitOptions.RemoveEmptyEntries));
         }
 
+        public override Stream OutputStream
+        {
+            get
+            {
+                if (fileStream == null)
+                    throw new Exception("Can't happen: No open stream");
+                if (!fileStream.CanWrite)
+                    throw new Exception("Can't happen: Open stream not writable");
+                return fileStream;
+            }
+        }
+
         public string FullPath
         {
             get
@@ -146,11 +158,26 @@ namespace Merge
             fileLastWriteTimeUtc = DateTime.MinValue;
         }
 
+        public override void ReadFileIntoStream(string name, Stream output)
+        {
+            if (fileStream != null) throw new Exception("Can't happen");
+            fileName = FullPathWithName(name);
+            sftpClient.DownloadFile(WireEncodedString(fileName), output);
+        }
+
         public override void OpenFileForWriting(string name, DateTime lastWriteTimeUtc)
         {
             if (fileStream != null) throw new Exception("Can't happen");
             fileName = FullPathWithName(name);
-            fileStream = sftpClient.OpenWrite(WireEncodedString(fileName));
+            // TODO: Neither .Create() nor .OpenWrite() is exactly
+            // right. We should really pass the SFTP file open mode
+            // Flags.CreateNew which creates a new file and fails if
+            // one already exists. Thid normally doesn't make a
+            // difference in our use case since we delete the old
+            // files first, but the user could have created a new file
+            // between our DeleteFile and CreateFile ops so
+            // Flags.CreateNew would be more bulletproof.
+            fileStream = sftpClient.Create(WireEncodedString(fileName));
             fileLastWriteTimeUtc = lastWriteTimeUtc;
         }
 

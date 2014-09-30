@@ -125,25 +125,14 @@ namespace Merge
                 srcConn.GoToDir(path);
                 dstConn.GoToDir(path);
 
-                srcConn.OpenFileForReading(name);
+                dstConn.OpenFileForWriting(name, lastWriteTimeUtc);
                 try
                 {
-                    dstConn.OpenFileForWriting(name, lastWriteTimeUtc);
-                    try
-                    {
-                        byte[] buf;
-                        int nbytes;
-                        while (srcConn.ReadFromFile(out buf, out nbytes))
-                            dstConn.WriteToFile(buf, nbytes);
-                    }
-                    finally
-                    {
-                        dstConn.CloseFile();
-                    }
+                    srcConn.ReadFileIntoStream(name, dstConn.OutputStream);
                 }
                 finally
                 {
-                    srcConn.CloseFile();
+                    dstConn.CloseFile();
                 }
             }
         }

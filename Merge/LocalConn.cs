@@ -19,6 +19,18 @@ namespace Merge
             this.root = root;
         }
 
+        public override Stream OutputStream
+        {
+            get
+            {
+                if (fileStream == null)
+                    throw new Exception("Can't happen: No open stream");
+                if (!fileStream.CanWrite)
+                    throw new Exception("Can't happen: Open stream not writable");
+                return fileStream;
+            }
+        }
+
         private string FullPath
         {
             get
@@ -121,6 +133,14 @@ namespace Merge
         {
             if (fileStream != null) throw new Exception("Can't happen");
             fileStream = File.Open(FullPathWithName(name), FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+
+        public override void ReadFileIntoStream(string name, Stream output)
+        {
+            if (fileStream != null) throw new Exception("Can't happen");
+            fileStream = File.Open(FullPathWithName(name), FileMode.Open, FileAccess.Read, FileShare.Read);
+            fileStream.CopyTo(output);
+            CloseFile();
         }
 
         public override void OpenFileForWriting(string name, DateTime lastWriteTimeUtc)
