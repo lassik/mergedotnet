@@ -169,6 +169,7 @@ namespace Merge
         {
             if (fileStream != null) throw new Exception("Can't happen");
             fileName = FullPathWithName(name);
+
             // TODO: Neither .Create() nor .OpenWrite() is exactly
             // right. We should really pass the SFTP file open mode
             // Flags.CreateNew which creates a new file and fails if
@@ -177,7 +178,13 @@ namespace Merge
             // files first, but the user could have created a new file
             // between our DeleteFile and CreateFile ops so
             // Flags.CreateNew would be more bulletproof.
-            fileStream = sftpClient.Create(WireEncodedString(fileName));
+
+            // Furthermore, trying to change the file's last-modified
+            // timestamp after a .Create() doesn't work. So on that
+            // count we have to use .OpenWrite().  I spend a moment
+            // looking at the libary code but didn't manage to find
+            // out what causes the situation.
+            fileStream = sftpClient.OpenWrite(WireEncodedString(fileName));
             fileLastWriteTimeUtc = lastWriteTimeUtc;
         }
 
