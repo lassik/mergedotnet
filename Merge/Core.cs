@@ -465,6 +465,7 @@ namespace Merge
                     break;
                 case Info.TypeEn.Other:
                     ops.Add(new Op.DeleteFile(path.ToArray(), conns[i], ent.Name));
+                    ops.Add(new Op.CreateEmptyDir(path.ToArray(), conns[i], ent.Name));
                     break;
             }
         }
