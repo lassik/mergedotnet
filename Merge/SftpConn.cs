@@ -188,20 +188,6 @@ namespace Merge
             fileLastWriteTimeUtc = lastWriteTimeUtc;
         }
 
-        public override bool ReadFromFile(out byte[] buf, out int nbytes)
-        {
-            if (fileStream == null) throw new Exception("Can't happen");
-            buf = new byte[1024 * 64];
-            nbytes = fileStream.Read(buf, 0, buf.Length);
-            return (nbytes > 0);
-        }
-
-        public override void WriteToFile(byte[] buf, int nbytes)
-        {
-            if (fileStream == null) throw new Exception("Can't happen");
-            fileStream.Write(buf, 0, nbytes);
-        }
-
         public override void CloseFile()
         {
             if (fileStream != null)

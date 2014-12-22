@@ -28,8 +28,6 @@ namespace Merge
         public abstract void OpenFileForReading(string name);
         public abstract void ReadFileIntoStream(string name, Stream output);
         public abstract void OpenFileForWriting(string name, DateTime lastWriteTimeUtc);
-        public abstract bool ReadFromFile(out byte[] buf, out int nbytes);
-        public abstract void WriteToFile(byte[] buf, int nbytes);
         public abstract void CloseFile();
     }
 }
