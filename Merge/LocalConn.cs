@@ -8,6 +8,8 @@ namespace Merge
 {
     public class LocalConn : Conn
     {
+        public const int BufferSizeInBytes = 512 * 1024;
+
         private string root;
         private List<string> subs = new List<string>();
 
@@ -132,21 +134,25 @@ namespace Merge
         public override void OpenFileForReading(string name)
         {
             if (fileStream != null) throw new Exception("Can't happen");
-            fileStream = File.Open(FullPathWithName(name), FileMode.Open, FileAccess.Read, FileShare.Read);
+            fileStream = new FileStream(FullPathWithName(name),
+                FileMode.Open, FileAccess.Read, FileShare.Read,
+                BufferSizeInBytes, FileOptions.SequentialScan);
         }
 
         public override void ReadFileIntoStream(string name, Stream output)
         {
             if (fileStream != null) throw new Exception("Can't happen");
             fileStream = File.Open(FullPathWithName(name), FileMode.Open, FileAccess.Read, FileShare.Read);
-            fileStream.CopyTo(output);
+            fileStream.CopyTo(output, BufferSizeInBytes);
             CloseFile();
         }
 
         public override void OpenFileForWriting(string name, DateTime lastWriteTimeUtc)
         {
             if (fileStream != null) throw new Exception("Can't happen");
-            fileStream = File.Open(FullPathWithName(name), FileMode.CreateNew, FileAccess.Write);
+            fileStream = new FileStream(FullPathWithName(name),
+                FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                BufferSizeInBytes, FileOptions.SequentialScan);
             fileLastWriteTimeUtc = lastWriteTimeUtc;
         }
 
